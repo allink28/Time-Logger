@@ -64,7 +64,7 @@ public class MenuPanel extends JPanel
         	public void actionPerformed(ActionEvent e) {
         		timeRemaining = 10;
         		timeRemainingLabel.setText(df.format(timeRemaining)+" Hours");
-        		displayText.append("Time reset!\n");
+        		displayText.append("Time reset to 10.\n");
         	}
         });
         add(controls, BorderLayout.NORTH);
@@ -82,7 +82,8 @@ public class MenuPanel extends JPanel
             		displayText.append("Time Remaining: "+timeRemaining+" hours.\n");
                 	timeRemainingLabel.setText(df.format(timeRemaining)+" Hours");
             	}catch(NumberFormatException nfe){
-            		displayText.append("Only enter numbers in minutes that you wish to have subtracted from the remaining time."+"\n");   
+					displayText.append("Only enter numbers in minutes that you wish to have subtracted from the remaining time."
+									+"\nNo decimal minutes.\n");   
             	}            		            	
                 textField.setText("");
             }
@@ -102,7 +103,7 @@ public class MenuPanel extends JPanel
         displayText.setLineWrap(true);
         displayText.setName( "displayText" );
         displayText.setEditable( false );
-        displayText.setText( "Welcome!\n" );
+        displayText.setText( "Welcome!\nAdd a negative number to increase the countdown timer.\n" );
         JScrollPane scrollingResult = new JScrollPane(displayText);
         scrollingResult.setAutoscrolls(true);
         add(scrollingResult, BorderLayout.CENTER);             
