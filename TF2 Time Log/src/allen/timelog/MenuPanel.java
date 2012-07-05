@@ -5,13 +5,16 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Properties;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -37,10 +40,12 @@ public class MenuPanel extends JPanel
 	private JTextArea displayText = new JTextArea(20, 20);
 	private JButton clear = new JButton("Clear Text");
 	private ButtonListener listener = new ButtonListener();
+	private JButton save = new JButton("Save");
+	Properties prop = new Properties();
 	
 	private JPanel controls = new JPanel();
-	private double timeRemaining = 10;
-	private JLabel timeRemainingLabel = new JLabel(timeRemaining+" Hours");
+	private double timeRemaining = 600; //Measured in minutes
+	private JLabel timeRemainingLabel;
 	private JButton reset = new JButton("Reset");	
 	
 	DecimalFormat df = new DecimalFormat("#.##");
@@ -48,39 +53,61 @@ public class MenuPanel extends JPanel
 	private long startTime = 0;
 	private long endTime;
 	private DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	
     // ----------------------------------------------------------
     /**
      * Create a new MenuPanel object.
      */
-    public MenuPanel(){
+    public MenuPanel(){    	
     	setLayout(new BorderLayout());
         setPreferredSize(new Dimension(500, 400));
-        setBackground(Color.DARK_GRAY);
+        setBackground(Color.DARK_GRAY);                
                         
         controls.setBackground(Color.GRAY);
+        timeRemainingLabel = new JLabel();
+        updateTime(0);
         controls.add(timeRemainingLabel);
-        controls.add(reset);
-        reset.addActionListener(new ActionListener(){
+        controls.add(save);        
+        save.addActionListener(new ActionListener(){ //Anonymous listener for Save button
         	public void actionPerformed(ActionEvent e) {
-        		timeRemaining = 10;
-        		timeRemainingLabel.setText(df.format(timeRemaining)+" Hours");
-        		displayText.append("Time reset to 10.\n");
+        		FileOutputStream fos = null;
+        		try {
+        			fos = new FileOutputStream("time.properties");
+            		//set the properties value
+            		prop.setProperty("time", Double.toString(timeRemaining));            		
+            		//save properties to project root folder
+            		prop.store(fos, null);
+            	} catch (IOException ex) {
+            		displayText.append("Couldn't save.\n");
+                }finally {
+                	try {
+        				fos.close();
+        			} catch (IOException e1) {
+        				displayText.append("Could'nt close output stream\n");
+        			}
+        		}
         	}
         });
+        controls.add(reset);
+        reset.addActionListener(new ActionListener(){ //Anonymous listener for Reset button
+        	public void actionPerformed(ActionEvent e) {
+        		timeRemaining = 600;
+        		updateTime(0);
+        		displayText.append("Time reset to 10 hours.\n");
+        	}
+        });
+        
         add(controls, BorderLayout.NORTH);
                 
         add(start, BorderLayout.WEST);
         start.addActionListener(listener);
         
-        
-        //Anonymous listener for the textfield that Adds/Substracts time
-        textField.addActionListener(new ActionListener() {
+        textField.addActionListener(new ActionListener() {//Anonymous listener for the textfield that Adds/Substracts time
             public void actionPerformed(ActionEvent e) {
             	try{
             		int minutes = Integer.parseInt(textField.getText());
-            		timeRemaining-=(minutes/60.0);
-            		displayText.append("Time Remaining: "+timeRemaining+" hours.\n");
-                	timeRemainingLabel.setText(df.format(timeRemaining)+" Hours");
+            		updateTime(minutes);
+            		displayText.append("Time Remaining: "+timeRemaining+" minutes.\n");
             	}catch(NumberFormatException nfe){
 					displayText.append("Only enter numbers in minutes that you wish to have subtracted from the remaining time."
 									+"\nNo decimal minutes.\n");   
@@ -89,7 +116,7 @@ public class MenuPanel extends JPanel
             }
         });
         
-        clear.addActionListener(new ActionListener(){
+        clear.addActionListener(new ActionListener(){ //Anonymous listener for Clear
         	public void actionPerformed(ActionEvent e) {
         		displayText.setText("");
         	}
@@ -107,15 +134,48 @@ public class MenuPanel extends JPanel
         JScrollPane scrollingResult = new JScrollPane(displayText);
         scrollingResult.setAutoscrolls(true);
         add(scrollingResult, BorderLayout.CENTER);             
-        
+             
+        FileInputStream fin = null;
+    	try{		
+    		fin = new FileInputStream("time.properties");
+    		prop.load(fin);
+    		timeRemaining = Double.parseDouble(prop.getProperty("time"));
+    		updateTime(0);
+    		displayText.append("Succesfully loaded time!\n");
+    	}
+    	catch(IOException e){
+    		displayText.append("No saved time found.\n");    		
+		} finally {
+			if(fin != null){
+				try {
+					fin.close();
+				} catch (IOException e1) {
+					displayText.append("Could'nt close input stream\n");
+				}
+			}
+		}
+    	
+    }
+    
+    /**
+     * Update the time remaining.
+     */
+    public void updateTime(double minutes){
+    	timeRemaining-=minutes;
+    	double m = timeRemaining%60;
+    	StringBuilder sb = new StringBuilder();
+    	if(m < 10){
+    		sb.append('0');
+    	}
+    	sb.append(df.format(m));
+    	timeRemainingLabel.setText((int)(timeRemaining/60)+":"+sb);
     }
 
     /**
      * Draws all the shapes displayed.
      * @param g The graphic context.
      */
-    public void paintComponent(Graphics g)
-    {
+    public void paintComponent(Graphics g) {
         super.paintComponent(g);
     }
     
@@ -127,7 +187,7 @@ public class MenuPanel extends JPanel
         public void actionPerformed( ActionEvent arg0 )
         {
             if(startTime == 0){
-            	start.setText("Stop");
+            	start.setText("Stop ");
             	startTime = System.nanoTime();
             	displayText.append("Started at: "+
             			dateFormat.format(Calendar.getInstance().getTime()) +"\n");            	
@@ -135,11 +195,11 @@ public class MenuPanel extends JPanel
             else{            	
             	endTime = System.nanoTime();
             	double seconds = (double)(endTime-startTime) / 1000000000.0;            	
-            	displayText.append("Elapsed time: "+ seconds + " seconds or "+df.format(seconds/3600)+" hours\n");
+            	displayText.append("Elapsed time: "+ Math.round(seconds) + " seconds or "+df.format(seconds/60)+" minutes\n");
             	start.setText("Start");
             	startTime = 0;
-            	timeRemaining-=(seconds/3600);
-            	timeRemainingLabel.setText(df.format(timeRemaining)+" Hours");
+            	
+            	updateTime(seconds/60);
             }
         }
     }
