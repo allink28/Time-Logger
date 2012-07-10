@@ -34,25 +34,27 @@ import javax.swing.JTextField;
 public class MenuPanel extends JPanel
 {
 	private static final long serialVersionUID = -3175089802389935233L;
-	private JPanel bottomContainer = new JPanel();
-	private JLabel tfEnterTimeLabel = new JLabel("Subtract time in minutes:");
-	private JTextField textField = new JTextField("",10);
-	private JTextArea displayText = new JTextArea(20, 20);
-	private JButton clear = new JButton("Clear Text");
-	private ButtonListener listener = new ButtonListener();
-	private JButton save = new JButton("Save");
-	Properties prop = new Properties();
 	
 	private JPanel controls = new JPanel();
+	private JButton save = new JButton("Save");
+	Properties prop = new Properties();
 	private double timeRemaining = 600; //Measured in minutes
 	private JLabel timeRemainingLabel;
-	private JButton reset = new JButton("Reset");	
+	private JButton reset = new JButton("Reset");
 	
 	DecimalFormat df = new DecimalFormat("#.##");
 	private JButton start = new JButton("Start");
 	private long startTime = 0;
 	private long endTime;
 	private DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+	
+	private JTextArea displayText = new JTextArea(20, 20);
+	
+	private JPanel bottomContainer = new JPanel();
+	private JLabel tfEnterTimeLabel = new JLabel("Subtract time in minutes:");
+	private JTextField textField = new JTextField("",10);	
+	private JButton clear = new JButton("Clear Text");
+	private ButtonListener listener = new ButtonListener();	
 	
     // ----------------------------------------------------------
     /**
@@ -73,10 +75,10 @@ public class MenuPanel extends JPanel
         		FileOutputStream fos = null;
         		try {
         			fos = new FileOutputStream("time.properties");
-            		//set the properties value
             		prop.setProperty("time", Double.toString(timeRemaining));            		
             		//save properties to project root folder
             		prop.store(fos, null);
+            		displayText.append("Saved.\n");
             	} catch (IOException ex) {
             		displayText.append("Couldn't save.\n");
                 }finally {
@@ -172,7 +174,6 @@ public class MenuPanel extends JPanel
     }
 
     /**
-     * Draws all the shapes displayed.
      * @param g The graphic context.
      */
     public void paintComponent(Graphics g) {
