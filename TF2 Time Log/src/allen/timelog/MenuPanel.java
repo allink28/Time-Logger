@@ -73,6 +73,9 @@ public class MenuPanel extends JPanel
         save.addActionListener(new ActionListener(){ //Anonymous listener for Save button
         	public void actionPerformed(ActionEvent e) {
         		FileOutputStream fos = null;
+        		if(start.getText().equals("Stop ")){
+        			displayText.append("WARNING: Timer is still running! Stop timer before saving to keep track of accumulated time.");
+        		}
         		try {
         			fos = new FileOutputStream("time.properties");
             		prop.setProperty("time", Double.toString(timeRemaining));            		
