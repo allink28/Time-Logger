@@ -62,7 +62,7 @@ public class MenuPanel extends JPanel
      */
     public MenuPanel(){    	
     	setLayout(new BorderLayout());
-        setPreferredSize(new Dimension(500, 400));
+        setPreferredSize(new Dimension(451, 395));//500, 400
         setBackground(Color.DARK_GRAY);                
                         
         controls.setBackground(Color.GRAY);
@@ -74,7 +74,7 @@ public class MenuPanel extends JPanel
         	public void actionPerformed(ActionEvent e) {
         		FileOutputStream fos = null;
         		if(start.getText().equals("Stop ")){
-        			displayText.append("WARNING: Timer is still running! Stop timer before saving to keep track of accumulated time.");
+        			displayText.append("WARNING: Timer is still running! Stop timer before saving to keep track of accumulated time.\n");
         		}
         		try {
         			fos = new FileOutputStream("time.properties");
