@@ -38,7 +38,7 @@ public class MenuPanel extends JPanel
 	private JPanel controls = new JPanel();
 	private JButton save = new JButton("Save");
 	Properties prop = new Properties();
-	private double timeRemaining = 600; //Measured in minutes
+	private double timeRemaining = 0; //Measured in minutes
 	private JLabel timeRemainingLabel;
 	private JButton reset = new JButton("Reset");
 	
@@ -96,7 +96,7 @@ public class MenuPanel extends JPanel
         controls.add(reset);
         reset.addActionListener(new ActionListener(){ //Anonymous listener for Reset button
         	public void actionPerformed(ActionEvent e) {
-        		timeRemaining = 600;
+        		timeRemaining = 540; //9 hours, in minutes
         		updateTime(0);
         		displayText.append("Time reset to 10 hours.\n");
         	}
@@ -167,13 +167,18 @@ public class MenuPanel extends JPanel
      */
     public void updateTime(double minutes){
     	timeRemaining-=minutes;
-    	double m = timeRemaining%60;
+    	double m = Math.abs(timeRemaining%60);
     	StringBuilder sb = new StringBuilder();
     	if(m < 10){
     		sb.append('0');
     	}
     	sb.append(df.format(m));
-    	timeRemainingLabel.setText((int)(timeRemaining/60)+":"+sb);
+    	if (timeRemaining<0){
+    		timeRemainingLabel.setText("-"+(int)(timeRemaining/60)+":"+sb);
+    	}
+    	else{
+    		timeRemainingLabel.setText((int)(timeRemaining/60)+":"+sb);
+    	}
     }
 
     /**
