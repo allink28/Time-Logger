@@ -39,11 +39,15 @@ public class MenuPanel extends JPanel
 	private JButton save = new JButton("Save");
 	Properties prop = new Properties();
 	private double timeRemaining = 0; //Measured in minutes
+	private byte items = 0;
+	private JLabel timeText = new JLabel("Time:");
 	private JLabel timeRemainingLabel;
 	private JButton reset = new JButton("Reset");
+	private JButton clear = new JButton("Clear Text");
 	
 	DecimalFormat df = new DecimalFormat("#.##");
 	private JButton start = new JButton("Start");
+	private ButtonListener listener = new ButtonListener();
 	private long startTime = 0;
 	private long endTime;
 	private DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -52,22 +56,26 @@ public class MenuPanel extends JPanel
 	
 	private JPanel bottomContainer = new JPanel();
 	private JLabel tfEnterTimeLabel = new JLabel("Subtract time in minutes:");
-	private JTextField textField = new JTextField("",10);	
-	private JButton clear = new JButton("Clear Text");
-	private ButtonListener listener = new ButtonListener();	
+	private JTextField textField = new JTextField("",7);	
+	private JLabel itemText = new JLabel("  Items:");
+	private JButton plusI = new JButton("+");
+	private JLabel itemCount = new JLabel(""+items);
+	private JButton minusI = new JButton("-");
 	
     // ----------------------------------------------------------
     /**
      * Create a new MenuPanel object.
      */
-    public MenuPanel(){    	
+    public MenuPanel(){
     	setLayout(new BorderLayout());
         setPreferredSize(new Dimension(451, 395));//500, 400
         setBackground(Color.DARK_GRAY);                
                         
+        //-----------------North (Controls) ------------------------------------- 
         controls.setBackground(Color.GRAY);
         timeRemainingLabel = new JLabel();
         updateTime(0);
+        controls.add(timeText);
         controls.add(timeRemainingLabel);
         controls.add(save);        
         save.addActionListener(new ActionListener(){ //Anonymous listener for Save button
@@ -78,7 +86,8 @@ public class MenuPanel extends JPanel
         		}
         		try {
         			fos = new FileOutputStream("time.properties");
-            		prop.setProperty("time", Double.toString(timeRemaining));            		
+            		prop.setProperty("time", Double.toString(timeRemaining));
+            		prop.setProperty("items", Byte.toString(items));
             		//save properties to project root folder
             		prop.store(fos, null);
             		displayText.append("Saved.\n");
@@ -96,18 +105,28 @@ public class MenuPanel extends JPanel
         controls.add(reset);
         reset.addActionListener(new ActionListener(){ //Anonymous listener for Reset button
         	public void actionPerformed(ActionEvent e) {
-        		timeRemaining = 540; //9 hours, in minutes
+        		timeRemaining = 480; //8 hours, in minutes
         		updateTime(0);
-        		displayText.append("Time reset to 10 hours.\n");
+        		items = 0;
+        		itemCount.setText(""+items);        		
+        		displayText.append("Time reset to 8 hours. Items reset to 0.\n");
         	}
         });
-        
+        controls.add(clear);
+        clear.addActionListener(new ActionListener(){ //Anonymous listener for Clear
+        	public void actionPerformed(ActionEvent e) {
+        		displayText.setText("");
+        	}
+        });        
         add(controls, BorderLayout.NORTH);
-                
+        
+        
+        //--------------------- West (Start/Stop button) ---------------------------------
         add(start, BorderLayout.WEST);
         start.addActionListener(listener);
         
-        textField.addActionListener(new ActionListener() {//Anonymous listener for the textfield that Adds/Substracts time
+        //--------------------- South (Bottom Container/Adjustments) ---------------------
+        textField.addActionListener(new ActionListener() {//Anonymous listener for textfield that Adds/Substracts time
             public void actionPerformed(ActionEvent e) {
             	try{
             		int minutes = Integer.parseInt(textField.getText());
@@ -120,18 +139,27 @@ public class MenuPanel extends JPanel
                 textField.setText("");
             }
         });
-        
-        clear.addActionListener(new ActionListener(){ //Anonymous listener for Clear
-        	public void actionPerformed(ActionEvent e) {
-        		displayText.setText("");
-        	}
+        plusI.addActionListener(new ActionListener() {//Anonymous listener for textfield that Adds/Substracts time
+            public void actionPerformed(ActionEvent e) {
+            	itemCount.setText(""+ ++items);
+            }
+        });
+        minusI.addActionListener(new ActionListener() {//Anonymous listener for textfield that Adds/Substracts time
+            public void actionPerformed(ActionEvent e) {
+            	itemCount.setText(""+ --items);
+            }
         });
         add(bottomContainer, BorderLayout.SOUTH);
         bottomContainer.setBackground(Color.GRAY);
         bottomContainer.add(tfEnterTimeLabel);
-        bottomContainer.add(textField);      
-        bottomContainer.add(clear);
+        bottomContainer.add(textField);
+        bottomContainer.add(itemText);
+        bottomContainer.add(plusI);
+        bottomContainer.add(itemCount);
+        bottomContainer.add(minusI);
         
+        
+      //--------------------- Center (textfield) --------------------------------------
         displayText.setLineWrap(true);
         displayText.setName( "displayText" );
         displayText.setEditable( false );
@@ -139,17 +167,21 @@ public class MenuPanel extends JPanel
         JScrollPane scrollingResult = new JScrollPane(displayText);
         scrollingResult.setAutoscrolls(true);
         add(scrollingResult, BorderLayout.CENTER);             
-             
+        
+      //--------------------- Loading --------------------------------------
         FileInputStream fin = null;
     	try{		
     		fin = new FileInputStream("time.properties");
     		prop.load(fin);
     		timeRemaining = Double.parseDouble(prop.getProperty("time"));
     		updateTime(0);
-    		displayText.append("Succesfully loaded time!\n");
+    		items = Byte.parseByte(prop.getProperty("items"));
+    		itemCount.setText(""+items);
+    		
+    		displayText.append("Succesfully loaded savefile!\n");
     	}
     	catch(IOException e){
-    		displayText.append("No saved time found.\n");    		
+    		displayText.append("No time.properties file found.\n");    		
 		} finally {
 			if(fin != null){
 				try {
