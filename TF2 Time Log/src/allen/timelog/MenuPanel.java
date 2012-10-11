@@ -109,7 +109,8 @@ public class MenuPanel extends JPanel
         		updateTime(0);
         		items = 0;
         		itemCount.setText(""+items);        		
-        		displayText.append("Time reset to 8 hours. Items reset to 0.\n");
+        		displayText.append("\nTime reset to 8 hours and items reset to 0, at "+
+        				dateFormat.format(Calendar.getInstance().getTime()) +"\n");
         	}
         });
         controls.add(clear);
@@ -123,9 +124,20 @@ public class MenuPanel extends JPanel
         
         //--------------------- West (Start/Stop button) ---------------------------------
         add(start, BorderLayout.WEST);
-        start.addActionListener(listener);
+        start.addActionListener(listener);        
         
-        //--------------------- South (Bottom Container/Adjustments) ---------------------
+      //--------------------- Center (textfield) --------------------------------------
+        displayText.setLineWrap(true);
+        displayText.setName( "displayText" );
+        displayText.setEditable( false );
+        displayText.setText( "Welcome!\nAdd a negative number to increase the countdown timer.\n" );
+        displayText.append("\nProgram opened at: "+
+    			dateFormat.format(Calendar.getInstance().getTime()) +"\n");
+        JScrollPane scrollingResult = new JScrollPane(displayText);
+        scrollingResult.setAutoscrolls(true);
+        add(scrollingResult, BorderLayout.CENTER);
+        
+      //--------------------- South (Bottom Container/Adjustments) ---------------------
         textField.addActionListener(new ActionListener() {//Anonymous listener for textfield that Adds/Substracts time
             public void actionPerformed(ActionEvent e) {
             	try{
@@ -158,16 +170,6 @@ public class MenuPanel extends JPanel
         bottomContainer.add(itemCount);
         bottomContainer.add(minusI);
         
-        
-      //--------------------- Center (textfield) --------------------------------------
-        displayText.setLineWrap(true);
-        displayText.setName( "displayText" );
-        displayText.setEditable( false );
-        displayText.setText( "Welcome!\nAdd a negative number to increase the countdown timer.\n" );
-        JScrollPane scrollingResult = new JScrollPane(displayText);
-        scrollingResult.setAutoscrolls(true);
-        add(scrollingResult, BorderLayout.CENTER);             
-        
       //--------------------- Loading --------------------------------------
         FileInputStream fin = null;
     	try{		
@@ -178,7 +180,7 @@ public class MenuPanel extends JPanel
     		items = Byte.parseByte(prop.getProperty("items"));
     		itemCount.setText(""+items);
     		
-    		displayText.append("Succesfully loaded savefile!\n");
+    		//displayText.append("Succesfully loaded savefile!\n");
     	}
     	catch(IOException e){
     		displayText.append("No time.properties file found.\n");    		
@@ -195,7 +197,9 @@ public class MenuPanel extends JPanel
     }
     
     /**
-     * Update the time remaining.
+     * Update the time remaining by subtracting the given time, then displaying the
+     * the result on the timeRemainingLabel.
+     * @param minutes Number of minutes to be subtracted from time remaining.
      */
     public void updateTime(double minutes){
     	timeRemaining-=minutes;
