@@ -38,10 +38,10 @@ public class MenuPanel extends JPanel
 	private JPanel controls = new JPanel();
 	private JButton save = new JButton("Save");
 	Properties prop = new Properties();
-	private double timeRemaining = 0; //Measured in minutes
+	private double totalTime = 0; //Measured in minutes
 	private byte items = 0;
 	private JLabel timeText = new JLabel("Time:");
-	private JLabel timeRemainingLabel;
+	private JLabel totalTimeLabel;
 	private JButton reset = new JButton("Reset");
 	private JButton clear = new JButton("Clear Text");
 	
@@ -55,7 +55,7 @@ public class MenuPanel extends JPanel
 	private JTextArea displayText = new JTextArea(20, 20);
 	
 	private JPanel bottomContainer = new JPanel();
-	private JLabel tfEnterTimeLabel = new JLabel("Subtract time in minutes:");
+	private JLabel tfEnterTimeLabel = new JLabel("Add time in minutes:");
 	private JTextField textField = new JTextField("",7);	
 	private JLabel itemText = new JLabel("  Items:");
 	private JButton plusI = new JButton("+");
@@ -73,10 +73,10 @@ public class MenuPanel extends JPanel
                         
         //-----------------North (Controls) ------------------------------------- 
         controls.setBackground(Color.GRAY);
-        timeRemainingLabel = new JLabel();
+        totalTimeLabel = new JLabel();
         updateTime(0);
         controls.add(timeText);
-        controls.add(timeRemainingLabel);
+        controls.add(totalTimeLabel);
         controls.add(save);        
         save.addActionListener(new ActionListener(){ //Anonymous listener for Save button
         	public void actionPerformed(ActionEvent e) {
@@ -86,7 +86,7 @@ public class MenuPanel extends JPanel
         		}
         		try {
         			fos = new FileOutputStream("time.properties");
-            		prop.setProperty("time", Double.toString(timeRemaining));
+            		prop.setProperty("time", Double.toString(totalTime));
             		prop.setProperty("items", Byte.toString(items));
             		//save properties to project root folder
             		prop.store(fos, null);
@@ -105,11 +105,11 @@ public class MenuPanel extends JPanel
         controls.add(reset);
         reset.addActionListener(new ActionListener(){ //Anonymous listener for Reset button
         	public void actionPerformed(ActionEvent e) {
-        		timeRemaining = 480; //8 hours, in minutes
+        		totalTime = 0;
         		updateTime(0);
         		items = 0;
         		itemCount.setText(""+items);        		
-        		displayText.append("\nTime reset to 8 hours and items reset to 0, at "+
+        		displayText.append("\nTime and items reset to 0, at "+
         				dateFormat.format(Calendar.getInstance().getTime()) +"\n");
         	}
         });
@@ -130,7 +130,7 @@ public class MenuPanel extends JPanel
         displayText.setLineWrap(true);
         displayText.setName( "displayText" );
         displayText.setEditable( false );
-        displayText.setText( "Welcome!\nAdd a negative number to increase the countdown timer.\n" );
+        displayText.setText( "Welcome!\n" );
         displayText.append("\nProgram opened at: "+
     			dateFormat.format(Calendar.getInstance().getTime()) +"\n");
         JScrollPane scrollingResult = new JScrollPane(displayText);
@@ -143,20 +143,20 @@ public class MenuPanel extends JPanel
             	try{
             		int minutes = Integer.parseInt(textField.getText());
             		updateTime(minutes);
-            		displayText.append("Time Remaining: "+timeRemaining+" minutes.\n");
+            		displayText.append("Accumulated time: "+totalTime+" minutes.\n");
             	}catch(NumberFormatException nfe){
-					displayText.append("Only enter numbers in minutes that you wish to have subtracted from the remaining time."
+					displayText.append("Only enter numbers in minutes that you wish to have added to the total time."
 									+"\nNo decimal minutes.\n");   
             	}            		            	
                 textField.setText("");
             }
         });
-        plusI.addActionListener(new ActionListener() {//Anonymous listener for textfield that Adds/Substracts time
+        plusI.addActionListener(new ActionListener() {//Anonymous listener for +item button
             public void actionPerformed(ActionEvent e) {
             	itemCount.setText(""+ ++items);
             }
         });
-        minusI.addActionListener(new ActionListener() {//Anonymous listener for textfield that Adds/Substracts time
+        minusI.addActionListener(new ActionListener() {//Anonymous listener for -item button
             public void actionPerformed(ActionEvent e) {
             	itemCount.setText(""+ --items);
             }
@@ -175,7 +175,7 @@ public class MenuPanel extends JPanel
     	try{		
     		fin = new FileInputStream("time.properties");
     		prop.load(fin);
-    		timeRemaining = Double.parseDouble(prop.getProperty("time"));
+    		totalTime = Double.parseDouble(prop.getProperty("time"));
     		updateTime(0);
     		items = Byte.parseByte(prop.getProperty("items"));
     		itemCount.setText(""+items);
@@ -202,19 +202,14 @@ public class MenuPanel extends JPanel
      * @param minutes Number of minutes to be subtracted from time remaining.
      */
     public void updateTime(double minutes){
-    	timeRemaining-=minutes;
-    	double m = Math.abs(timeRemaining%60);
+    	totalTime+=minutes;
+    	double m = (totalTime%60);
     	StringBuilder sb = new StringBuilder();
     	if(m < 10){
     		sb.append('0');
     	}
     	sb.append(df.format(m));
-    	if (timeRemaining<0){
-    		timeRemainingLabel.setText("-"+(int)(timeRemaining/60)+":"+sb);
-    	}
-    	else{
-    		timeRemainingLabel.setText((int)(timeRemaining/60)+":"+sb);
-    	}
+    	totalTimeLabel.setText((int)(totalTime/60)+":"+sb);
     }
 
     /**
