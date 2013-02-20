@@ -36,7 +36,6 @@ public class MenuPanel extends JPanel
 	private static final long serialVersionUID = -3175089802389935233L;
 	
 	private JPanel controls = new JPanel();
-	private JButton save = new JButton("Save");
 	Properties prop = new Properties();
 	private double totalTime = 0; //Measured in minutes
 	private byte items = 0;
@@ -48,8 +47,6 @@ public class MenuPanel extends JPanel
 	DecimalFormat df = new DecimalFormat("#.##");
 	private JButton start = new JButton("Start");
 	private ButtonListener listener = new ButtonListener();
-	private long startTime = 0;
-	private long endTime;
 	private DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 	
 	private JTextArea displayText = new JTextArea(20, 20);
@@ -77,31 +74,6 @@ public class MenuPanel extends JPanel
         updateTime(0);
         controls.add(timeText);
         controls.add(totalTimeLabel);
-        controls.add(save);        
-        save.addActionListener(new ActionListener(){ //Anonymous listener for Save button
-        	public void actionPerformed(ActionEvent e) {
-        		FileOutputStream fos = null;
-        		if(start.getText().equals("Stop ")){
-        			displayText.append("WARNING: Timer is still running! Stop timer before saving to keep track of accumulated time.\n");
-        		}
-        		try {
-        			fos = new FileOutputStream("time.properties");
-            		prop.setProperty("time", Double.toString(totalTime));
-            		prop.setProperty("items", Byte.toString(items));
-            		//save properties to project root folder
-            		prop.store(fos, null);
-            		displayText.append("Saved.\n");
-            	} catch (IOException ex) {
-            		displayText.append("Couldn't save.\n");
-                }finally {
-                	try {
-        				fos.close();
-        			} catch (IOException e1) {
-        				displayText.append("Could'nt close output stream\n");
-        			}
-        		}
-        	}
-        });
         controls.add(reset);
         reset.addActionListener(new ActionListener(){ //Anonymous listener for Reset button
         	public void actionPerformed(ActionEvent e) {
@@ -149,16 +121,19 @@ public class MenuPanel extends JPanel
 									+"\nNo decimal minutes.\n");   
             	}            		            	
                 textField.setText("");
+                save();
             }
         });
         plusI.addActionListener(new ActionListener() {//Anonymous listener for +item button
             public void actionPerformed(ActionEvent e) {
             	itemCount.setText(""+ ++items);
+            	save();
             }
         });
         minusI.addActionListener(new ActionListener() {//Anonymous listener for -item button
             public void actionPerformed(ActionEvent e) {
             	itemCount.setText(""+ --items);
+            	save();
             }
         });
         add(bottomContainer, BorderLayout.SOUTH);
@@ -201,7 +176,7 @@ public class MenuPanel extends JPanel
      * the result on the timeRemainingLabel.
      * @param minutes Number of minutes to be subtracted from time remaining.
      */
-    public void updateTime(double minutes){
+    private void updateTime(double minutes){
     	totalTime+=minutes;
     	double m = (totalTime%60);
     	StringBuilder sb = new StringBuilder();
@@ -210,6 +185,28 @@ public class MenuPanel extends JPanel
     	}
     	sb.append(df.format(m));
     	totalTimeLabel.setText((int)(totalTime/60)+":"+sb);
+    }
+    
+    /**
+     * Save time and items to property file
+     */
+    private void save(){
+		FileOutputStream fos = null;
+		try {
+			fos = new FileOutputStream("time.properties");
+    		prop.setProperty("time", Double.toString(totalTime));
+    		prop.setProperty("items", Byte.toString(items));
+    		//save properties to project root folder
+    		prop.store(fos, null);
+    	} catch (IOException ex) {
+    		displayText.append("Couldn't save.\n");
+        }finally {
+        	try {
+				fos.close();
+			} catch (IOException e1) {
+				displayText.append("Could'nt close output stream\n");
+			}
+		}
     }
 
     /**
@@ -224,6 +221,7 @@ public class MenuPanel extends JPanel
      */
     private class ButtonListener implements ActionListener
     {    	
+    	private long startTime = 0;
         public void actionPerformed( ActionEvent arg0 )
         {
             if(startTime == 0){
@@ -233,13 +231,13 @@ public class MenuPanel extends JPanel
             			dateFormat.format(Calendar.getInstance().getTime()) +"\n");            	
             }
             else{            	
-            	endTime = System.nanoTime();
-            	double seconds = (double)(endTime-startTime) / 1000000000.0;            	
+            	double seconds = (double)(System.nanoTime()-startTime) / 1000000000.0;            	
             	displayText.append("Elapsed time: "+ Math.round(seconds) + " seconds or "+df.format(seconds/60)+" minutes\n");
             	start.setText("Start");
             	startTime = 0;
             	
             	updateTime(seconds/60);
+            	save();
             }
         }
     }
